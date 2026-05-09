@@ -43,7 +43,7 @@ export default function Cadastro() {
 
     try {
       if (!nome || !email || !senha) {
-        setMsg("Preencha todos os campos");
+        setMsg("Preencha todos os campos do forms");
         return;
       }
 
