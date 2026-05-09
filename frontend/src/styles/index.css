@@ -1,0 +1,138 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+body {
+  background: #f5f5f5;
+  padding-bottom: 60px;
+}
+
+.container {
+  padding: 40px;
+  text-align: center;
+}
+
+input {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: 250px;
+}
+
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+.lista {
+  list-style: none;
+  margin-top: 20px;
+}
+
+.lista li {
+  background: white;
+  margin: 10px auto;
+  padding: 10px;
+  width: 400px;
+}
+
+.erro {
+  color: #e8490f;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.link-login {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.link-login span {
+  color: #0e4194;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+}
+
+.link-login span::after {
+  content: "";
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: #e8490f;
+  transition: width 0.3s ease;
+}
+
+.link-login span:hover::after {
+  width: 100%;
+}
+
+.container form button {
+  background: #0e4194;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.container form button:hover {
+  background: #e8490f;
+  transform: translateY(-2px);
+}
+
+.container form button:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: #0e4194;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: #e8490f;
+  transform: translateY(-2px);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+} 
+
+.link-cadastro {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.link-cadastro span {
+  color: #0e4194;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+}
+
+.link-cadastro span::after {
+  content: "";
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: #e8490f;
+  transition: width 0.3s ease;
+}
+
+.link-cadastro span:hover::after {
+  width: 100%;
+}
