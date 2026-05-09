@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
         'lifetime' => 0,
         'path' => '/',
         'secure' => false,
+        'httponly' => false,
         'samesite' => 'Lax'
     ]);
 
