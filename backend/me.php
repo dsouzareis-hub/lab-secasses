@@ -5,7 +5,6 @@ session_set_cookie_params([
     'path' => '/',
     'domain' => '',
     'secure' => false,
-    'httponly' => true,
     'samesite' => 'Lax'
 ]);
 

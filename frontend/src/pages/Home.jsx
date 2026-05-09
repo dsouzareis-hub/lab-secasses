@@ -142,7 +142,14 @@ export default function Home() {
         <ul className="lista">
           {itens.map((item) => (
             <li key={item.id}>
-              <strong>{item.nome}</strong> - {item.descricao}
+
+            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              <strong>{item.nome}</strong>
+              <span>-</span>
+              <span dangerouslySetInnerHTML={{ __html: item.descricao }} />
+              <span>-</span>
+              <small>Criado por: {item.autor}</small>
+            </div>     
 
               <div>
                 <button onClick={() => handleEdit(item)}>Editar</button>

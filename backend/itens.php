@@ -5,7 +5,6 @@ session_set_cookie_params([
     'path' => '/',
     'domain' => 'localhost',
     'secure' => false,
-    'httponly' => true,
     'samesite' => 'Lax'
 ]);
 
@@ -24,87 +23,44 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
     exit;
 }
 
-$maxSize = 1 * 1024 * 1024;
-$contentLength = $_SERVER['CONTENT_LENGTH'] ?? 0;
-
-if ($contentLength > $maxSize) {
-    http_response_code(413);
-    echo json_encode([
-        "data" => null,
-        "error" => "Payload muito grande"
-    ]);
-    exit;
-}
-
 require_once "auth.php";
 $user_id = requireAuth();
 
-$ip = $_SERVER["REMOTE_ADDR"];
-$method = $_SERVER["REQUEST_METHOD"];
-
-$limite = ($method === "GET") ? 20 : 5;
-
-$key = "rate_" . $ip . "_" . $user_id . "_" . $method;
-
-if (!isset($_SESSION[$key])) {
-    $_SESSION[$key] = [
-        "count" => 0,
-        "start" => microtime(true)
-    ];
-}
-
-$controle = &$_SESSION[$key];
-$agora = microtime(true);
-
-if (($agora - $controle["start"]) >= 1) {
-    $controle["count"] = 0;
-    $controle["start"] = $agora;
-}
-
-$controle["count"]++;
-
-if ($controle["count"] > $limite) {
-    http_response_code(429);
-    echo json_encode([
-        "data" => null,
-        "error" => "Muitas requisições",
-        "retry_after" => 1
-    ]);
-    exit;
-}
-
 require_once "db.php";
 
-if ($method === "GET") {
+/* =========================
+   GET
+========================= */
+if ($_SERVER["REQUEST_METHOD"] === "GET") {
 
     if (isset($_GET["id"])) {
         $id = intval($_GET["id"]);
 
         $stmt = $conn->prepare("
-            SELECT id, nome, descricao
-            FROM itens
-            WHERE id = ? AND user_id = ?
+            SELECT i.id, i.nome, i.descricao, u.nome AS autor
+            FROM itens i
+            LEFT JOIN usuarios u ON u.user_id = i.user_id
+            WHERE i.id = ?
         ");
-        $stmt->bind_param("is", $id, $user_id);
+
+        $stmt->bind_param("i", $id);
         $stmt->execute();
 
         $result = $stmt->get_result();
-        $item = $result->fetch_assoc();
 
         echo json_encode([
-            "data" => $item ?: null,
+            "data" => $result->fetch_assoc() ?: null,
             "error" => null
         ]);
         exit;
     }
 
     $stmt = $conn->prepare("
-        SELECT id, nome, descricao
-        FROM itens
-        WHERE user_id = ?
+        SELECT i.id, i.nome, i.descricao, u.nome AS autor
+        FROM itens i
+        LEFT JOIN usuarios u ON u.user_id = i.user_id
     ");
 
-    $stmt->bind_param("s", $user_id);
     $stmt->execute();
 
     $result = $stmt->get_result();
@@ -121,29 +77,19 @@ if ($method === "GET") {
     exit;
 }
 
-if ($method === "POST") {
+/* =========================
+   POST (FIX PRINCIPAL)
+========================= */
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    $raw = file_get_contents("php://input");
-    $data = json_decode($raw, true);
-
-    if (!is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
-        http_response_code(400);
-        echo json_encode([
-            "data" => null,
-            "error" => "JSON inválido"
-        ]);
-        exit;
-    }
+    $data = json_decode(file_get_contents("php://input"), true);
 
     $nome = trim($data["nome"] ?? "");
     $descricao = trim($data["descricao"] ?? "");
 
     if (!$nome || !$descricao) {
         http_response_code(400);
-        echo json_encode([
-            "data" => null,
-            "error" => "Campos obrigatórios"
-        ]);
+        echo json_encode(["error" => "Campos obrigatórios"]);
         exit;
     }
 
@@ -152,37 +98,25 @@ if ($method === "POST") {
         VALUES (?, ?, ?)
     ");
 
+    /* 🔥 FIX CRÍTICO AQUI */
     $stmt->bind_param("sss", $nome, $descricao, $user_id);
 
     if ($stmt->execute()) {
-        echo json_encode([
-            "data" => ["ok" => true],
-            "error" => null
-        ]);
+        echo json_encode(["ok" => true]);
     } else {
         http_response_code(500);
-        echo json_encode([
-            "data" => null,
-            "error" => "Erro ao criar item"
-        ]);
+        echo json_encode(["error" => "Erro ao criar item"]);
     }
 
     exit;
 }
 
-if ($method === "PUT") {
+/* =========================
+   PUT
+========================= */
+if ($_SERVER["REQUEST_METHOD"] === "PUT") {
 
-    $raw = file_get_contents("php://input");
-    $data = json_decode($raw, true);
-
-    if (!is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
-        http_response_code(400);
-        echo json_encode([
-            "data" => null,
-            "error" => "JSON inválido"
-        ]);
-        exit;
-    }
+    $data = json_decode(file_get_contents("php://input"), true);
 
     $id = intval($data["id"] ?? 0);
     $nome = trim($data["nome"] ?? "");
@@ -190,87 +124,50 @@ if ($method === "PUT") {
 
     if (!$id || !$nome || !$descricao) {
         http_response_code(400);
-        echo json_encode([
-            "data" => null,
-            "error" => "Dados inválidos"
-        ]);
+        echo json_encode(["error" => "Dados inválidos"]);
         exit;
     }
 
     $stmt = $conn->prepare("
         UPDATE itens 
         SET nome = ?, descricao = ?
-        WHERE id = ? AND user_id = ?
+        WHERE id = ?
     ");
 
-    $stmt->bind_param("ssis", $nome, $descricao, $id, $user_id);
+    $stmt->bind_param("ssi", $nome, $descricao, $id);
 
-    if ($stmt->execute()) {
-        echo json_encode([
-            "data" => ["ok" => true],
-            "error" => null
-        ]);
-    } else {
-        http_response_code(500);
-        echo json_encode([
-            "data" => null,
-            "error" => "Erro ao atualizar"
-        ]);
-    }
+    $stmt->execute();
 
+    echo json_encode(["ok" => true]);
     exit;
 }
 
-if ($method === "DELETE") {
+/* =========================
+   DELETE
+========================= */
+if ($_SERVER["REQUEST_METHOD"] === "DELETE") {
 
-    $raw = file_get_contents("php://input");
-    $data = json_decode($raw, true);
-
-    if (!is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
-        http_response_code(400);
-        echo json_encode([
-            "data" => null,
-            "error" => "JSON inválido"
-        ]);
-        exit;
-    }
+    $data = json_decode(file_get_contents("php://input"), true);
 
     $id = intval($data["id"] ?? 0);
 
     if (!$id) {
         http_response_code(400);
-        echo json_encode([
-            "data" => null,
-            "error" => "ID inválido"
-        ]);
+        echo json_encode(["error" => "ID inválido"]);
         exit;
     }
 
     $stmt = $conn->prepare("
-        DELETE FROM itens 
-        WHERE id = ? AND user_id = ?
+        DELETE FROM itens WHERE id = ?
     ");
 
-    $stmt->bind_param("is", $id, $user_id);
+    $stmt->bind_param("i", $id);
 
-    if ($stmt->execute()) {
-        echo json_encode([
-            "data" => ["ok" => true],
-            "error" => null
-        ]);
-    } else {
-        http_response_code(500);
-        echo json_encode([
-            "data" => null,
-            "error" => "Erro ao deletar"
-        ]);
-    }
+    $stmt->execute();
 
+    echo json_encode(["ok" => true]);
     exit;
 }
 
 http_response_code(405);
-echo json_encode([
-    "data" => null,
-    "error" => "Método não permitido"
-]);
+echo json_encode(["error" => "Método não permitido"]);
