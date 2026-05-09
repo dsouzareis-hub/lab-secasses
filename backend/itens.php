@@ -77,9 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
     exit;
 }
 
-/* =========================
-   POST (FIX PRINCIPAL)
-========================= */
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $data = json_decode(file_get_contents("php://input"), true);
@@ -98,7 +96,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         VALUES (?, ?, ?)
     ");
 
-    /* 🔥 FIX CRÍTICO AQUI */
     $stmt->bind_param("sss", $nome, $descricao, $user_id);
 
     if ($stmt->execute()) {
@@ -111,9 +108,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     exit;
 }
 
-/* =========================
-   PUT
-========================= */
 if ($_SERVER["REQUEST_METHOD"] === "PUT") {
 
     $data = json_decode(file_get_contents("php://input"), true);
@@ -142,9 +136,6 @@ if ($_SERVER["REQUEST_METHOD"] === "PUT") {
     exit;
 }
 
-/* =========================
-   DELETE
-========================= */
 if ($_SERVER["REQUEST_METHOD"] === "DELETE") {
 
     $data = json_decode(file_get_contents("php://input"), true);

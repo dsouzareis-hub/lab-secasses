@@ -15,7 +15,6 @@ CREATE TABLE usuarios (
   senha VARCHAR(255) NOT NULL,
   data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-  -- 🔥 UUID do usuário (usado no sistema)
   user_id VARCHAR(36) NOT NULL UNIQUE,
 
   INDEX idx_user_id (user_id)
@@ -29,7 +28,6 @@ CREATE TABLE itens (
   nome VARCHAR(255) NOT NULL,
   descricao VARCHAR(255) NOT NULL,
 
-  -- 🔥 AGORA STRING (UUID) — CORRETO
   user_id VARCHAR(36) NOT NULL,
 
   INDEX idx_user_id (user_id),
@@ -62,7 +60,6 @@ VALUES (
 
 );
 
--- 🔥 AGORA FUNCIONA (UUID)
 INSERT INTO itens (nome, descricao, user_id)
 VALUES (
 
